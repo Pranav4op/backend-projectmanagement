@@ -16,7 +16,11 @@ app.use(
   }),
 );
 
-app.get("/pranav", (req, res) => {
+import healthCheckRouter from "./routes/healthcheck.routes.js";
+
+app.use("/api/v1/healthcheck", healthCheckRouter);
+
+app.get("/", (req, res) => {
   res.send("This is still Pranav's page but from App");
 });
 
