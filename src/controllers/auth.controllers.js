@@ -18,7 +18,7 @@ const generateAccessAndRefreshTokens = async (userId) => {
   } catch (error) {
     throw new ApiError(
       500,
-      "Internal Server Error while generating access token",
+      "Internal Server Error while generating access and refresh token",
     );
   }
 };
@@ -71,4 +71,45 @@ const registerUser = asyncHandler(async (req, res) => {
     );
 });
 
-export { registerUser };
+const login = asyncHandler(async (req, res) => {
+  const { username, password } = req.body;
+  if (!username) {
+    throw new ApiError(400, "Username is required");
+  }
+
+  const user = await User.findOne({ username });
+  if (!user) {
+    throw new ApiError(400, "User does not exist");
+  }
+
+  const passwordCorrect = await user.isPasswordCorrect(password);
+  if (!passwordCorrect) {
+    throw new ApiError(400, "Invalid Password");
+  }
+  const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(
+    user._id,
+  );
+
+  const loggedInUser = await User.findById(user._id).select(
+    "-password -refreshToken -emailVerificationToken -emailVerificationExpiry ",
+  );
+
+  const options = {
+    httpOnly: true,
+    secure: true,
+  };
+
+  return res
+    .status(200)
+    .cookie("accessToken", accessToken, options)
+    .cookie("refreshToken", refreshToken, options)
+    .json(
+      new ApiResponse(
+        200,
+        { user: loggedInUser, accessToken, refreshToken },
+        "User logged in succcessfully",
+      ),
+    );
+});
+
+export { registerUser, login };

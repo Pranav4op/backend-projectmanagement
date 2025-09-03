@@ -28,4 +28,11 @@ const userRegisterValidator = () => {
   ];
 };
 
-export { userRegisterValidator };
+const userLoginValidator = () => {
+  return [
+    body("username").trim().notEmpty().withMessage("Username is required"),
+    body("password").notEmpty().withMessage("Password cannot be empty"),
+  ];
+};
+
+export { userRegisterValidator, userLoginValidator };
